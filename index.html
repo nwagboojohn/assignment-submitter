@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Collector</title>
+    <link rel="shortcut icon" href="images/logo_head.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ... (Existing CSS remains the same) ... */
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .submission-count {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 100px 6%;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            height: 85%;
+            overflow-y: scroll;
+            scrollbar-width: thin;
+            max-width: 500px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2.2rem;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-btn {
+            background: #e0e0e0;
+            color: var(--primary-color);
+            border: 1px dashed #999;
+            padding: 12px;
+            text-align: center;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: block;
+            transition: background 0.3s;
+        }
+
+        .file-helper {
+            font-size: 0.8rem;
+            color: #e74c3c;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .word-counter {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 5px;
+            display: block;
+            text-align: right;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 2000;
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: visibility 0.4s, opacity 0.4s linear, top 0.4s;
+            opacity: 0;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            top: 40px;
+        }
+
+        .toast.loading { background-color: #f39c12; }
+        .toast.success { background-color: #2ecc71; }
+        .toast.error { background-color: #e74c3c; }
+
+        @media (max-width: 430px){
+            header { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            Submitter.
+        </div>
+        <div class="submission-count">
+            Total Submissions: <span id="countDisplay">0</span>
+        </div>
+    </header>
+
+    <main class="hero">
+        <h1>Coursework Submission Portal</h1>
+        <p>Securely upload your assignments and projects before the deadline.</p>
+        <button class="btn" id="openModalBtn">Submit Assignment</button>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h2>Submission Details</h2>
+            <form id="assignmentForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="fullname" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Matric Number</label>
+                    <input type="text" id="matric" required placeholder="e.g. 25CG000000">
+                </div>
+                <div class="form-group">
+                    <label>Department / Programme</label>
+                    <input type="text" id="department" required placeholder="Mathematics / Computer Science">
+                </div>
+                <div class="form-group">
+                    <label>Level</label>
+                    <select id="level" required>
+                        <option value="100">100 Level</option>
+                        <option value="200">200 Level</option>
+                        <option value="300">300 Level</option>
+                        <option value="400">400 Level</option>
+                        <option value="500">500 Level</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assignment Screenshots</label>
+                    <div class="file-upload-wrapper">
+                        <span class="file-upload-btn" id="fileNameDisplay">📸 Click to Choose Images</span>
+                        <input type="file" id="screenshots" accept="image/*" multiple required>
+                    </div>
+                    <span class="file-helper">Note: Max 6 images. Each image must be 250KB or less.</span>
+                </div>
+                <div class="form-group">
+                    <label>Access Code</label>
+                    <input type="password" id="accessCode" required placeholder="Enter student submission code">
+                </div>
+                <div class="form-group">
+                    <label>Description / Notes</label>
+                    <textarea id="description" rows="3" placeholder="Any additional notes?"></textarea>
+                    <span id="wordCountDisplay" class="word-counter">0 / 100 words</span>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;" id="submitBtn">Confirm Submission</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const modalOverlay = document.getElementById('modalOverlay');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const fileInput = document.getElementById('screenshots');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const toast = document.getElementById('toast');
+        const descriptionInput = document.getElementById('description');
+        const wordCountDisplay = document.getElementById('wordCountDisplay');
+        const accessCodeInput = document.getElementById('accessCode');
+
+        const REQUIRED_PASS = "MachineLearning@2620.2.0";
+        const MAX_FILE_SIZE = 250 * 1024; // 250KB in bytes
+
+        openModalBtn.addEventListener('click', () => modalOverlay.style.display = 'flex');
+        closeModalBtn.addEventListener('click', () => modalOverlay.style.display = 'none');
+
+        function showToast(message, type) {
+            toast.textContent = message;
+            toast.className = `toast show ${type}`;
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 4000);
+        }
+
+        // File validation (Count + Individual Size)
+        fileInput.addEventListener('change', function() {
+            const files = Array.from(this.files);
+            
+            if (files.length > 6) {
+                showToast("Limit exceeded! Max 6 images.", "error");
+                this.value = '';
+                fileNameDisplay.textContent = "📸 Click to Choose Images";
+                return;
+            }
+
+            // Check if any file exceeds 250KB
+            const oversized = files.filter(file => file.size > MAX_FILE_SIZE);
+            if (oversized.length > 0) {
+                showToast(`One or more images exceed 250KB limit!`, "error");
+                this.value = '';
+                fileNameDisplay.textContent = "📸 Click to Choose Images";
+                return;
+            }
+
+            if (files.length > 0) {
+                fileNameDisplay.textContent = `📸 ${files.length} image(s) selected`;
+            }
+        });
+
+        // Word count limiter
+        descriptionInput.addEventListener('input', function() {
+            let words = this.value.trim().split(/\s+/).filter(word => word.length > 0);
+            if (words.length > 100) {
+                this.value = words.slice(0, 100).join(" ") + " ";
+                words = words.slice(0, 100);
+                showToast("100 word limit reached!", "error");
+            }
+            wordCountDisplay.textContent = `${words.length} / 100 words`;
+        });
+
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpsQF2SIcQOu9ao5t9ernq5oC_TKoNgznYg95hKurvXrRpnUvENdmI5QbgR2vEXYhI/exec'; 
+        let totalSubmissions = 0;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+                totalSubmissions = data.total;
+                document.getElementById('countDisplay').textContent = totalSubmissions;
+            } catch (error) { console.error("Fetch error", error); }
+        });
+
+        document.getElementById('assignmentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 1. Validate Password First
+            if (accessCodeInput.value !== REQUIRED_PASS) {
+                showToast("Incorrect Access Code! Submission denied.", "error");
+                return;
+            }
+
+            // 2. Validate Files one last time (Size check)
+            const files = Array.from(fileInput.files);
+            const oversized = files.filter(f => f.size > MAX_FILE_SIZE);
+            if (oversized.length > 0) {
+                showToast("Some images are too large (Max 250KB).", "error");
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.textContent = 'Uploading...';
+            submitBtn.disabled = true;
+            showToast("Submitting. Please wait...", "loading");
+
+            const filePromises = files.map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({
+                        fileName: file.name,
+                        mimeType: file.type,
+                        fileData: reader.result.split(',')[1] 
+                    });
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            try {
+                const uploadedFiles = await Promise.all(filePromises);
+                const payload = {
+                    secretKey: "Machine101_Learning_Assignment_Submitter_@2620_SecretKey",
+                    fullname: document.getElementById('fullname').value,
+                    matric: document.getElementById('matric').value,
+                    department: document.getElementById('department').value,
+                    level: document.getElementById('level').value,
+                    description: document.getElementById('description').value,
+                    files: uploadedFiles 
+                };
+
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if(result.status !== 'success') throw new Error('Server error');
+
+                showToast("Assignment Submitted Successfully!", "success");
+                totalSubmissions++;
+                document.getElementById('countDisplay').textContent = totalSubmissions;
+                
+                document.getElementById('assignmentForm').reset();
+                fileNameDisplay.textContent = "📸 Click to Choose Images";
+                wordCountDisplay.textContent = "0 / 100 words";
+                setTimeout(() => { modalOverlay.style.display = 'none'; }, 1000);
+
+            } catch (error) {
+                showToast("Submission failed. Try again.", "error");
+            } finally {
+                submitBtn.textContent = 'Confirm Submission';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
